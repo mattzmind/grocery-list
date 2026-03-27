@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Grocery List">
+<meta name="theme-color" content="#1a1a2e">
+<title>Weekly Grocery List</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'DM Sans',sans-serif;background:#fafaf8;color:#333;padding-bottom:env(safe-area-inset-bottom)}
+.app{max-width:520px;margin:0 auto;padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top))}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.header h1{font-size:20px;font-weight:600;color:#1a1a2e}
+.btn-list{background:#f0f0f0;color:#1a1a2e;border:none;border-radius:20px;padding:6px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-list.active{background:#1a1a2e;color:#fff}
+.store-tabs{display:flex;gap:8px;margin-bottom:12px}
+.store-tab{flex:1;padding:10px 0;border:1.5px solid #e0e0e0;border-radius:10px;background:#fff;color:#555;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
+.store-tab.active{border:2px solid #1a1a2e;background:#1a1a2e;color:#fff}
+.search{width:100%;padding:10px 14px;border-radius:10px;border:1.5px solid #e0e0e0;font-size:14px;font-family:inherit;margin-bottom:16px;outline:none;background:#fff}
+.search:focus{border-color:#1a1a2e}
+.cat-header{display:flex;align-items:center;gap:6px;padding:8px 12px;background:#f5f5f0;border-radius:8px;margin-bottom:4px}
+.cat-header .icon{font-size:14px}
+.cat-header .name{font-size:13px;font-weight:600;color:#444}
+.cat-header .count{font-size:11px;color:#999;margin-left:auto}
+.cat-group{margin-bottom:16px}
+.item-row{display:flex;align-items:center;padding:10px 12px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:all .15s;border-radius:0}
+.item-row.added{background:#e8f5e9;border-radius:6px;margin:2px 0}
+.checkbox{width:22px;height:22px;border-radius:6px;border:2px solid #ccc;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.checkbox.checked{border:none;background:#2e7d32}
+.checkbox.checked::after{content:'✓';color:#fff;font-size:14px}
+.checkbox.gray{background:#9e9e9e;border:none}
+.checkbox.gray::after{content:'✓';color:#fff;font-size:14px}
+.item-info{margin-left:12px;flex:1;min-width:0}
+.item-name{font-size:14px;color:#333}
+.item-name.added{font-weight:500;color:#1b5e20}
+.item-note-inline{font-size:11px;color:#666;font-style:italic;margin-top:2px}
+.freq{font-size:9px;color:#2e7d32;letter-spacing:1px;flex-shrink:0;margin-left:8px}
+.qty-ctrl{display:flex;align-items:center;gap:4px;margin-left:10px}
+.qty-btn{width:24px;height:24px;border-radius:6px;border:1px solid #ccc;background:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;font-family:inherit}
+.qty-val{font-size:14px;font-weight:500;min-width:20px;text-align:center}
+.list-section{margin-bottom:20px}
+.list-store-header{font-size:13px;font-weight:600;color:#1a1a2e;padding:8px 0;border-bottom:2px solid #1a1a2e;margin-bottom:8px}
+.list-item{padding:10px 0;border-bottom:1px solid #f0f0f0}
+.list-item.checked{opacity:.4}
+.list-item-top{display:flex;align-items:center;gap:10px}
+.list-item-name{flex:1;font-size:14px;min-width:0}
+.list-item-name.struck{text-decoration:line-through;color:#999}
+.list-item-cat{font-size:12px;color:#999;margin-left:8px}
+.remove-btn{background:none;border:none;cursor:pointer;font-size:16px;color:#ccc;padding:0 4px}
+.note-area{margin-left:32px;margin-top:4px}
+.note-text{font-size:12px;color:#666;cursor:pointer;font-style:italic}
+.note-placeholder{font-size:12px;color:#bbb;cursor:pointer}
+.note-input{font-size:12px;border:1px solid #ddd;border-radius:6px;padding:4px 8px;width:80%;font-family:inherit;outline:none}
+.empty-state{text-align:center;padding:3rem 1rem;color:#999}
+.empty-icon{font-size:40px;margin-bottom:8px}
+.clear-btn{font-size:12px;color:#c62828;background:none;border:none;cursor:pointer;font-family:inherit;font-weight:500}
+.list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.list-count{font-size:13px;color:#888}
+.back-btn{background:none;border:none;font-size:13px;color:#1a1a2e;cursor:pointer;font-family:inherit;font-weight:500;padding:6px 0}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+const MASTER={"costco":[{"cat":"Baby","item":"Baby Food & Snacks","freq":1},{"cat":"Baby","item":"Baby Wipes","freq":1},{"cat":"Bakery & Bread","item":"Artesano Bread","freq":2},{"cat":"Bakery & Bread","item":"Dave's Killer Bread","freq":2},{"cat":"Bakery & Bread","item":"Muffins","freq":2},{"cat":"Bakery & Bread","item":"Hamburger Buns","freq":1},{"cat":"Beverages","item":"Sparkling Water","freq":1},{"cat":"Dairy & Eggs","item":"Eggs","freq":4},{"cat":"Dairy & Eggs","item":"Milk (A2 Protein)","freq":3},{"cat":"Dairy & Eggs","item":"Butter","freq":1},{"cat":"Floral","item":"Flowers","freq":1},{"cat":"Frozen","item":"Sweet Potato Fries","freq":1},{"cat":"Household","item":"Storage Totes","freq":3},{"cat":"Household","item":"Cleaning Supplies","freq":1},{"cat":"Household","item":"Fabric Softener","freq":1},{"cat":"Household","item":"Napkins","freq":1},{"cat":"Household","item":"Paper Towels","freq":1},{"cat":"Household","item":"Toilet Paper","freq":1},{"cat":"Meat & Protein","item":"Rotisserie Chicken","freq":2},{"cat":"Meat & Protein","item":"Meatballs","freq":1},{"cat":"Meat & Protein","item":"Shrimp Poke","freq":1},{"cat":"Pantry","item":"Olive Oil","freq":1},{"cat":"Pantry","item":"Sauces & Condiments","freq":1},{"cat":"Personal Care","item":"Toothpaste","freq":1},{"cat":"Produce","item":"Salad Mix","freq":1},{"cat":"Snacks & Candy","item":"Chocolate (Ferrero)","freq":3},{"cat":"Snacks & Candy","item":"Protein Bars","freq":1}],"ralphs":[{"cat":"Baby","item":"Baby Food & Snacks","freq":13},{"cat":"Bakery & Bread","item":"Dave's Killer Bread","freq":17},{"cat":"Bakery & Bread","item":"Hawaiian Sweet Rolls","freq":5},{"cat":"Bakery & Bread","item":"Artesano Bread","freq":3},{"cat":"Bakery & Bread","item":"Tortillas","freq":2},{"cat":"Bakery & Bread","item":"Bread (Flatbread)","freq":1},{"cat":"Bakery & Bread","item":"Bread (Sourdough)","freq":1},{"cat":"Bakery & Bread","item":"La Brea Italian Bread","freq":1},{"cat":"Beverages","item":"Sparkling Water","freq":9},{"cat":"Beverages","item":"Coffee","freq":1},{"cat":"Beverages","item":"Grape Juice","freq":1},{"cat":"Beverages","item":"Orange Juice","freq":1},{"cat":"Dairy & Eggs","item":"Eggs","freq":14},{"cat":"Dairy & Eggs","item":"Yogurt","freq":11},{"cat":"Dairy & Eggs","item":"Milk (Whole)","freq":8},{"cat":"Dairy & Eggs","item":"Almond Milk","freq":7},{"cat":"Dairy & Eggs","item":"Cheese","freq":3},{"cat":"Dairy & Eggs","item":"Milk (2%)","freq":3},{"cat":"Dairy & Eggs","item":"Butter","freq":1},{"cat":"Frozen","item":"Frozen Strawberries","freq":2},{"cat":"Meat & Protein","item":"Bacon","freq":1},{"cat":"Meat & Protein","item":"Ground Beef","freq":1},{"cat":"Meat & Protein","item":"Ground Turkey","freq":1},{"cat":"Meat & Protein","item":"Pork Carnitas","freq":1},{"cat":"Meat & Protein","item":"Shredded Chicken","freq":1},{"cat":"Pantry","item":"Baking Supplies","freq":13},{"cat":"Pantry","item":"Sauces & Condiments","freq":7},{"cat":"Pantry","item":"Preserves (Bonne Maman)","freq":6},{"cat":"Pantry","item":"Condensed Milk / Cream","freq":4},{"cat":"Pantry","item":"Pasta","freq":3},{"cat":"Pantry","item":"Rice","freq":3},{"cat":"Pantry","item":"Garlic","freq":2},{"cat":"Pantry","item":"Corn (Canned)","freq":1},{"cat":"Pantry","item":"Honey","freq":1},{"cat":"Pantry","item":"Peanut Butter","freq":1},{"cat":"Produce \u2014 Fruit","item":"Bananas","freq":15},{"cat":"Produce \u2014 Fruit","item":"Apples","freq":13},{"cat":"Produce \u2014 Fruit","item":"Berries","freq":12},{"cat":"Produce \u2014 Fruit","item":"Oranges","freq":10},{"cat":"Produce \u2014 Fruit","item":"Grapes","freq":9},{"cat":"Produce \u2014 Fruit","item":"Avocados","freq":6},{"cat":"Produce \u2014 Fruit","item":"Limes","freq":5},{"cat":"Produce \u2014 Fruit","item":"Peaches/Nectarines","freq":5},{"cat":"Produce \u2014 Fruit","item":"Watermelon","freq":5},{"cat":"Produce \u2014 Fruit","item":"Kiwi","freq":3},{"cat":"Produce \u2014 Fruit","item":"Dates","freq":2},{"cat":"Produce \u2014 Fruit","item":"Mangos","freq":2},{"cat":"Produce \u2014 Fruit","item":"Fruit Mix (Fresh Cut)","freq":1},{"cat":"Produce \u2014 Fruit","item":"Pears","freq":1},{"cat":"Produce \u2014 Vegetables","item":"Spinach","freq":15},{"cat":"Produce \u2014 Vegetables","item":"Peppers (Bell)","freq":13},{"cat":"Produce \u2014 Vegetables","item":"Potatoes","freq":13},{"cat":"Produce \u2014 Vegetables","item":"Onions","freq":11},{"cat":"Produce \u2014 Vegetables","item":"Tomatoes","freq":11},{"cat":"Produce \u2014 Vegetables","item":"Cilantro","freq":9},{"cat":"Produce \u2014 Vegetables","item":"Beets","freq":8},{"cat":"Produce \u2014 Vegetables","item":"Broccoli","freq":8},{"cat":"Produce \u2014 Vegetables","item":"Squash","freq":7},{"cat":"Produce \u2014 Vegetables","item":"Beans (Green)","freq":6},{"cat":"Produce \u2014 Vegetables","item":"Carrots","freq":6},{"cat":"Produce \u2014 Vegetables","item":"Cabbage","freq":4},{"cat":"Produce \u2014 Vegetables","item":"Cucumber","freq":4},{"cat":"Produce \u2014 Vegetables","item":"Green Onions","freq":4},{"cat":"Produce \u2014 Vegetables","item":"Lettuce","freq":4},{"cat":"Produce \u2014 Vegetables","item":"Celery","freq":3},{"cat":"Produce \u2014 Vegetables","item":"Garlic","freq":3},{"cat":"Produce \u2014 Vegetables","item":"Asparagus","freq":2},{"cat":"Produce \u2014 Vegetables","item":"Brussels Sprouts","freq":2},{"cat":"Produce \u2014 Vegetables","item":"Edamame","freq":2},{"cat":"Produce \u2014 Vegetables","item":"Ginger","freq":2},{"cat":"Produce \u2014 Vegetables","item":"Eggplant","freq":1},{"cat":"Produce \u2014 Vegetables","item":"Kale","freq":1},{"cat":"Produce \u2014 Vegetables","item":"Mushrooms","freq":1},{"cat":"Snacks & Candy","item":"Crackers","freq":13},{"cat":"Snacks & Candy","item":"Protein Bars","freq":8},{"cat":"Snacks & Candy","item":"Chocolate (Lindt)","freq":5},{"cat":"Snacks & Candy","item":"Chips (Corn)","freq":2},{"cat":"Snacks & Candy","item":"Chocolate (Ferrero)","freq":2},{"cat":"Snacks & Candy","item":"Cookies","freq":2},{"cat":"Snacks & Candy","item":"Peanut Butter","freq":2},{"cat":"Snacks & Candy","item":"Chocolate (Ghirardelli)","freq":1},{"cat":"Snacks & Candy","item":"Donuts","freq":1},{"cat":"Snacks & Candy","item":"Fruit Snacks","freq":1},{"cat":"Snacks & Candy","item":"Gum","freq":1},{"cat":"Snacks & Candy","item":"Nutella","freq":1},{"cat":"Snacks & Candy","item":"Nuts","freq":1}]};
+const ICONS={"Baby":"\u{1F476}","Bakery & Bread":"\u{1F35E}","Beverages":"\u{1F964}","Dairy & Eggs":"\u{1F95B}","Floral":"\u{1F490}","Frozen":"\u{1F9CA}","Household":"\u{1F3E0}","Meat & Protein":"\u{1F969}","Pantry":"\u{1FAD9}","Personal Care":"\u{1FAA5}","Produce":"\u{1F96C}","Produce \u2014 Fruit":"\u{1F34E}","Produce \u2014 Vegetables":"\u{1F966}","Snacks & Candy":"\u{1F36B}"};
+const SK="weekly-grocery-list-v2";
+
+let state={store:"ralphs",search:"",list:JSON.parse(localStorage.getItem(SK)||"{}"),view:"browse",editNote:null,checked:{}};
+
+function save(){localStorage.setItem(SK,JSON.stringify(state.list))}
+function k(s,i){return s+"::"+i}
+function dots(f){return "\u25CF".repeat(Math.min(f,5))+(f>5?"+":"")}
+
+function render(){
+  const a=document.getElementById("app");
+  const listCount=Object.keys(state.list).length;
+
+  if(state.view==="browse"){
+    const items=state.store==="costco"?MASTER.costco:MASTER.ralphs;
+    const q=state.search.toLowerCase();
+    const filtered=items.filter(i=>!q||i.item.toLowerCase().includes(q)||i.cat.toLowerCase().includes(q));
+    const grouped={};
+    filtered.forEach(i=>{if(!grouped[i.cat])grouped[i.cat]=[];grouped[i.cat].push(i)});
+
+    let h=`<div class="header"><h1>Weekly grocery list</h1>`;
+    if(listCount>0) h+=`<button class="btn-list active" onclick="state.view='list';render()">My list (${listCount})</button>`;
+    h+=`</div>`;
+
+    h+=`<div class="store-tabs">`;
+    h+=`<button class="store-tab ${state.store==="ralphs"?"active":""}" onclick="state.store='ralphs';state.search='';render()">Ralphs / Stater Bros</button>`;
+    h+=`<button class="store-tab ${state.store==="costco"?"active":""}" onclick="state.store='costco';state.search='';render()">Costco</button>`;
+    h+=`</div>`;
+
+    h+=`<input class="search" type="text" placeholder="Search items..." value="${state.search}" oninput="state.search=this.value;render()">`;
+
+    for(const[cat,catItems]of Object.entries(grouped)){
+      h+=`<div class="cat-group">`;
+      h+=`<div class="cat-header"><span class="icon">${ICONS[cat]||"\u{1F4E6}"}</span><span class="name">${cat}</span><span class="count">${catItems.length}</span></div>`;
+      for(const item of catItems){
+        const ky=k(state.store,item.item);
+        const added=!!state.list[ky];
+        const note=state.list[ky]?.note||"";
+        h+=`<div class="item-row ${added?"added":""}" onclick="toggleItem('${state.store}','${item.item.replace(/'/g,"\\'")}',${item.freq})">`;
+        h+=`<div class="checkbox ${added?"checked":""}"></div>`;
+        h+=`<div class="item-info"><div class="item-name ${added?"added":""}">${item.item}</div>`;
+        if(note) h+=`<div class="item-note-inline">${note}</div>`;
+        h+=`</div>`;
+        h+=`<div class="freq">${dots(item.freq)}</div>`;
+        if(added){
+          const qty=state.list[ky].qty||1;
+          h+=`<div class="qty-ctrl" onclick="event.stopPropagation()">`;
+          h+=`<button class="qty-btn" onclick="setQty('${ky}',-1)">\u2212</button>`;
+          h+=`<span class="qty-val">${qty}</span>`;
+          h+=`<button class="qty-btn" onclick="setQty('${ky}',1)">+</button>`;
+          h+=`</div>`;
+        }
+        h+=`</div>`;
+      }
+      h+=`</div>`;
+    }
+    a.innerHTML=h;
+  } else {
+    const entries=Object.entries(state.list);
+    const costcoItems=entries.filter(([,v])=>v.store==="costco");
+    const ralphsItems=entries.filter(([,v])=>v.store==="ralphs");
+
+    let h=`<div class="header"><h1>Weekly grocery list</h1><button class="btn-list" onclick="state.view='browse';render()">\u2190 Browse</button></div>`;
+
+    if(listCount===0){
+      h+=`<div class="empty-state"><div class="empty-icon">\u{1F6D2}</div><div style="font-size:15px">Your list is empty</div><div style="font-size:13px;margin-top:4px">Switch to Browse to add items</div></div>`;
+    } else {
+      h+=`<div class="list-header"><span class="list-count">${listCount} items</span><button class="clear-btn" onclick="clearAll()">Clear all</button></div>`;
+
+      if(costcoItems.length>0){
+        h+=`<div class="list-section"><div class="list-store-header">\u{1F3EA} Costco</div>`;
+        for(const[ky,v] of costcoItems) h+=renderListItem(ky,v);
+        h+=`</div>`;
+      }
+      if(ralphsItems.length>0){
+        h+=`<div class="list-section"><div class="list-store-header">\u{1F3EA} Ralphs / Stater Bros</div>`;
+        for(const[ky,v] of ralphsItems) h+=renderListItem(ky,v);
+        h+=`</div>`;
+      }
+    }
+    a.innerHTML=h;
+  }
+}
+
+function renderListItem(ky,v){
+  const chk=!!state.checked[ky];
+  let h=`<div class="list-item ${chk?"checked":""}">`;
+  h+=`<div class="list-item-top">`;
+  h+=`<div class="checkbox ${chk?"gray":""}" onclick="toggleCheck('${ky}')"></div>`;
+  h+=`<div class="list-item-name ${chk?"struck":""}">${v.item}</div>`;
+  h+=`<span class="list-item-cat">${v.cat}</span>`;
+  h+=`<div class="qty-ctrl">`;
+  h+=`<button class="qty-btn" onclick="setQty('${ky}',-1)">\u2212</button>`;
+  h+=`<span class="qty-val">${v.qty}</span>`;
+  h+=`<button class="qty-btn" onclick="setQty('${ky}',1)">+</button>`;
+  h+=`</div>`;
+  h+=`<button class="remove-btn" onclick="removeItem('${ky}')">\u00D7</button>`;
+  h+=`</div>`;
+  h+=`<div class="note-area">`;
+  if(state.editNote===ky){
+    h+=`<input class="note-input" id="note-input" value="${(v.note||"").replace(/"/g,'&quot;')}" placeholder="Add a note..." onblur="saveNote('${ky}')" onkeydown="if(event.key==='Enter')saveNote('${ky}')">`;
+  } else {
+    if(v.note) h+=`<div class="note-text" onclick="startEditNote('${ky}')">${v.note}</div>`;
+    else h+=`<div class="note-placeholder" onclick="startEditNote('${ky}')">+ Add note</div>`;
+  }
+  h+=`</div></div>`;
+  return h;
+}
+
+function toggleItem(store,item,freq){
+  const ky=k(store,item);
+  if(state.list[ky]){delete state.list[ky]}
+  else{state.list[ky]={store,item,cat:getCat(store,item),qty:1,note:""}}
+  save();render();
+}
+
+function getCat(store,item){
+  const src=store==="costco"?MASTER.costco:MASTER.ralphs;
+  const found=src.find(i=>i.item===item);
+  return found?found.cat:"";
+}
+
+function setQty(ky,delta){
+  if(!state.list[ky])return;
+  const nq=state.list[ky].qty+delta;
+  if(nq<1)return;
+  state.list[ky].qty=nq;
+  save();render();
+}
+
+function removeItem(ky){
+  delete state.list[ky];
+  if(Object.keys(state.list).length===0) state.view="browse";
+  save();render();
+}
+
+function clearAll(){
+  state.list={};state.checked={};state.view="browse";
+  save();render();
+}
+
+function toggleCheck(ky){
+  state.checked[ky]=!state.checked[ky];
+  render();
+}
+
+function startEditNote(ky){
+  state.editNote=ky;
+  render();
+  setTimeout(()=>{const el=document.getElementById("note-input");if(el)el.focus()},50);
+}
+
+function saveNote(ky){
+  const el=document.getElementById("note-input");
+  if(el&&state.list[ky]){state.list[ky].note=el.value;save()}
+  state.editNote=null;
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
