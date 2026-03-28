@@ -15,13 +15,15 @@ body{font-family:'DM Sans',sans-serif;background:#fafaf8;color:#333;padding-bott
 .app{max-width:520px;margin:0 auto;padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top))}
 .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .header h1{font-size:20px;font-weight:600;color:#1a1a2e}
-.btn-list{background:#f0f0f0;color:#1a1a2e;border:none;border-radius:20px;padding:6px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
-.btn-list.active{background:#1a1a2e;color:#fff}
+.btn-pill{background:#f0f0f0;color:#1a1a2e;border:none;border-radius:20px;padding:6px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-pill.active{background:#1a1a2e;color:#fff}
 .store-tabs{display:flex;gap:8px;margin-bottom:12px}
 .store-tab{flex:1;padding:10px 0;border:1.5px solid #e0e0e0;border-radius:10px;background:#fff;color:#555;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
 .store-tab.active{border:2px solid #1a1a2e;background:#1a1a2e;color:#fff}
-.search{width:100%;padding:10px 14px;border-radius:10px;border:1.5px solid #e0e0e0;font-size:14px;font-family:inherit;margin-bottom:16px;outline:none;background:#fff}
+.search-row{display:flex;gap:8px;margin-bottom:16px}
+.search{flex:1;padding:10px 14px;border-radius:10px;border:1.5px solid #e0e0e0;font-size:14px;font-family:inherit;outline:none;background:#fff}
 .search:focus{border-color:#1a1a2e}
+.btn-add-new{background:#2e7d32;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
 .cat-header{display:flex;align-items:center;gap:6px;padding:8px 12px;background:#f5f5f0;border-radius:8px;margin-bottom:4px}
 .cat-header .icon{font-size:14px}
 .cat-header .name{font-size:13px;font-weight:600;color:#444}
@@ -31,9 +33,9 @@ body{font-family:'DM Sans',sans-serif;background:#fafaf8;color:#333;padding-bott
 .item-row.added{background:#e8f5e9;border-radius:6px;margin:2px 0}
 .checkbox{width:22px;height:22px;border-radius:6px;border:2px solid #ccc;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
 .checkbox.checked{border:none;background:#2e7d32}
-.checkbox.checked::after{content:'✓';color:#fff;font-size:14px}
+.checkbox.checked::after{content:'\2713';color:#fff;font-size:14px}
 .checkbox.gray{background:#9e9e9e;border:none}
-.checkbox.gray::after{content:'✓';color:#fff;font-size:14px}
+.checkbox.gray::after{content:'\2713';color:#fff;font-size:14px}
 .item-info{margin-left:12px;flex:1;min-width:0}
 .item-name{font-size:14px;color:#333}
 .item-name.added{font-weight:500;color:#1b5e20}
@@ -56,145 +58,222 @@ body{font-family:'DM Sans',sans-serif;background:#fafaf8;color:#333;padding-bott
 .note-placeholder{font-size:12px;color:#bbb;cursor:pointer}
 .note-input{font-size:12px;border:1px solid #ddd;border-radius:6px;padding:4px 8px;width:80%;font-family:inherit;outline:none}
 .empty-state{text-align:center;padding:3rem 1rem;color:#999}
-.empty-icon{font-size:40px;margin-bottom:8px}
 .clear-btn{font-size:12px;color:#c62828;background:none;border:none;cursor:pointer;font-family:inherit;font-weight:500}
 .list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .list-count{font-size:13px;color:#888}
-.back-btn{background:none;border:none;font-size:13px;color:#1a1a2e;cursor:pointer;font-family:inherit;font-weight:500;padding:6px 0}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal{background:#fff;border-radius:16px;padding:24px;width:100%;max-width:400px}
+.modal h2{font-size:18px;font-weight:600;color:#1a1a2e;margin-bottom:16px}
+.modal-field{margin-bottom:14px}
+.modal-field label{display:block;font-size:12px;font-weight:500;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px}
+.modal-field input,.modal-field select{width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:inherit;outline:none;background:#fff}
+.modal-field input:focus,.modal-field select:focus{border-color:#1a1a2e}
+.modal-actions{display:flex;gap:8px;margin-top:20px}
+.modal-actions button{flex:1;padding:12px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;border:none}
+.btn-cancel{background:#f0f0f0;color:#666}
+.btn-confirm{background:#2e7d32;color:#fff}
+.custom-tag{display:inline-block;font-size:9px;background:#e3f2fd;color:#1565c0;padding:1px 6px;border-radius:4px;margin-left:6px;font-weight:500;vertical-align:middle}
 </style>
 </head>
 <body>
-<div class="app" id="app"></div>
+<div class="app">
+  <div id="toolbar"></div>
+  <div id="content"></div>
+</div>
+<div id="modal-root"></div>
 <script>
 const MASTER={"costco":[{"cat":"Baby","item":"Baby Food & Snacks","freq":1},{"cat":"Baby","item":"Baby Wipes","freq":1},{"cat":"Bakery & Bread","item":"Artesano Bread","freq":2},{"cat":"Bakery & Bread","item":"Dave's Killer Bread","freq":2},{"cat":"Bakery & Bread","item":"Muffins","freq":2},{"cat":"Bakery & Bread","item":"Hamburger Buns","freq":1},{"cat":"Beverages","item":"Sparkling Water","freq":1},{"cat":"Dairy & Eggs","item":"Eggs","freq":4},{"cat":"Dairy & Eggs","item":"Milk (A2 Protein)","freq":3},{"cat":"Dairy & Eggs","item":"Butter","freq":1},{"cat":"Floral","item":"Flowers","freq":1},{"cat":"Frozen","item":"Sweet Potato Fries","freq":1},{"cat":"Household","item":"Storage Totes","freq":3},{"cat":"Household","item":"Cleaning Supplies","freq":1},{"cat":"Household","item":"Fabric Softener","freq":1},{"cat":"Household","item":"Napkins","freq":1},{"cat":"Household","item":"Paper Towels","freq":1},{"cat":"Household","item":"Toilet Paper","freq":1},{"cat":"Meat & Protein","item":"Rotisserie Chicken","freq":2},{"cat":"Meat & Protein","item":"Meatballs","freq":1},{"cat":"Meat & Protein","item":"Shrimp Poke","freq":1},{"cat":"Pantry","item":"Olive Oil","freq":1},{"cat":"Pantry","item":"Sauces & Condiments","freq":1},{"cat":"Personal Care","item":"Toothpaste","freq":1},{"cat":"Produce","item":"Salad Mix","freq":1},{"cat":"Snacks & Candy","item":"Chocolate (Ferrero)","freq":3},{"cat":"Snacks & Candy","item":"Protein Bars","freq":1}],"ralphs":[{"cat":"Baby","item":"Baby Food & Snacks","freq":13},{"cat":"Bakery & Bread","item":"Dave's Killer Bread","freq":17},{"cat":"Bakery & Bread","item":"Hawaiian Sweet Rolls","freq":5},{"cat":"Bakery & Bread","item":"Artesano Bread","freq":3},{"cat":"Bakery & Bread","item":"Tortillas","freq":2},{"cat":"Bakery & Bread","item":"Bread (Flatbread)","freq":1},{"cat":"Bakery & Bread","item":"Bread (Sourdough)","freq":1},{"cat":"Bakery & Bread","item":"La Brea Italian Bread","freq":1},{"cat":"Beverages","item":"Sparkling Water","freq":9},{"cat":"Beverages","item":"Coffee","freq":1},{"cat":"Beverages","item":"Grape Juice","freq":1},{"cat":"Beverages","item":"Orange Juice","freq":1},{"cat":"Dairy & Eggs","item":"Eggs","freq":14},{"cat":"Dairy & Eggs","item":"Yogurt","freq":11},{"cat":"Dairy & Eggs","item":"Milk (Whole)","freq":8},{"cat":"Dairy & Eggs","item":"Almond Milk","freq":7},{"cat":"Dairy & Eggs","item":"Cheese","freq":3},{"cat":"Dairy & Eggs","item":"Milk (2%)","freq":3},{"cat":"Dairy & Eggs","item":"Butter","freq":1},{"cat":"Frozen","item":"Frozen Strawberries","freq":2},{"cat":"Meat & Protein","item":"Bacon","freq":1},{"cat":"Meat & Protein","item":"Ground Beef","freq":1},{"cat":"Meat & Protein","item":"Ground Turkey","freq":1},{"cat":"Meat & Protein","item":"Pork Carnitas","freq":1},{"cat":"Meat & Protein","item":"Shredded Chicken","freq":1},{"cat":"Pantry","item":"Baking Supplies","freq":13},{"cat":"Pantry","item":"Sauces & Condiments","freq":7},{"cat":"Pantry","item":"Preserves (Bonne Maman)","freq":6},{"cat":"Pantry","item":"Condensed Milk / Cream","freq":4},{"cat":"Pantry","item":"Pasta","freq":3},{"cat":"Pantry","item":"Rice","freq":3},{"cat":"Pantry","item":"Garlic","freq":2},{"cat":"Pantry","item":"Corn (Canned)","freq":1},{"cat":"Pantry","item":"Honey","freq":1},{"cat":"Pantry","item":"Peanut Butter","freq":1},{"cat":"Produce \u2014 Fruit","item":"Bananas","freq":15},{"cat":"Produce \u2014 Fruit","item":"Apples","freq":13},{"cat":"Produce \u2014 Fruit","item":"Berries","freq":12},{"cat":"Produce \u2014 Fruit","item":"Oranges","freq":10},{"cat":"Produce \u2014 Fruit","item":"Grapes","freq":9},{"cat":"Produce \u2014 Fruit","item":"Avocados","freq":6},{"cat":"Produce \u2014 Fruit","item":"Limes","freq":5},{"cat":"Produce \u2014 Fruit","item":"Peaches/Nectarines","freq":5},{"cat":"Produce \u2014 Fruit","item":"Watermelon","freq":5},{"cat":"Produce \u2014 Fruit","item":"Kiwi","freq":3},{"cat":"Produce \u2014 Fruit","item":"Dates","freq":2},{"cat":"Produce \u2014 Fruit","item":"Mangos","freq":2},{"cat":"Produce \u2014 Fruit","item":"Fruit Mix (Fresh Cut)","freq":1},{"cat":"Produce \u2014 Fruit","item":"Pears","freq":1},{"cat":"Produce \u2014 Vegetables","item":"Spinach","freq":15},{"cat":"Produce \u2014 Vegetables","item":"Peppers (Bell)","freq":13},{"cat":"Produce \u2014 Vegetables","item":"Potatoes","freq":13},{"cat":"Produce \u2014 Vegetables","item":"Onions","freq":11},{"cat":"Produce \u2014 Vegetables","item":"Tomatoes","freq":11},{"cat":"Produce \u2014 Vegetables","item":"Cilantro","freq":9},{"cat":"Produce \u2014 Vegetables","item":"Beets","freq":8},{"cat":"Produce \u2014 Vegetables","item":"Broccoli","freq":8},{"cat":"Produce \u2014 Vegetables","item":"Squash","freq":7},{"cat":"Produce \u2014 Vegetables","item":"Beans (Green)","freq":6},{"cat":"Produce \u2014 Vegetables","item":"Carrots","freq":6},{"cat":"Produce \u2014 Vegetables","item":"Cabbage","freq":4},{"cat":"Produce \u2014 Vegetables","item":"Cucumber","freq":4},{"cat":"Produce \u2014 Vegetables","item":"Green Onions","freq":4},{"cat":"Produce \u2014 Vegetables","item":"Lettuce","freq":4},{"cat":"Produce \u2014 Vegetables","item":"Celery","freq":3},{"cat":"Produce \u2014 Vegetables","item":"Garlic","freq":3},{"cat":"Produce \u2014 Vegetables","item":"Asparagus","freq":2},{"cat":"Produce \u2014 Vegetables","item":"Brussels Sprouts","freq":2},{"cat":"Produce \u2014 Vegetables","item":"Edamame","freq":2},{"cat":"Produce \u2014 Vegetables","item":"Ginger","freq":2},{"cat":"Produce \u2014 Vegetables","item":"Eggplant","freq":1},{"cat":"Produce \u2014 Vegetables","item":"Kale","freq":1},{"cat":"Produce \u2014 Vegetables","item":"Mushrooms","freq":1},{"cat":"Snacks & Candy","item":"Crackers","freq":13},{"cat":"Snacks & Candy","item":"Protein Bars","freq":8},{"cat":"Snacks & Candy","item":"Chocolate (Lindt)","freq":5},{"cat":"Snacks & Candy","item":"Chips (Corn)","freq":2},{"cat":"Snacks & Candy","item":"Chocolate (Ferrero)","freq":2},{"cat":"Snacks & Candy","item":"Cookies","freq":2},{"cat":"Snacks & Candy","item":"Peanut Butter","freq":2},{"cat":"Snacks & Candy","item":"Chocolate (Ghirardelli)","freq":1},{"cat":"Snacks & Candy","item":"Donuts","freq":1},{"cat":"Snacks & Candy","item":"Fruit Snacks","freq":1},{"cat":"Snacks & Candy","item":"Gum","freq":1},{"cat":"Snacks & Candy","item":"Nutella","freq":1},{"cat":"Snacks & Candy","item":"Nuts","freq":1}]};
-const ICONS={"Baby":"\u{1F476}","Bakery & Bread":"\u{1F35E}","Beverages":"\u{1F964}","Dairy & Eggs":"\u{1F95B}","Floral":"\u{1F490}","Frozen":"\u{1F9CA}","Household":"\u{1F3E0}","Meat & Protein":"\u{1F969}","Pantry":"\u{1FAD9}","Personal Care":"\u{1FAA5}","Produce":"\u{1F96C}","Produce \u2014 Fruit":"\u{1F34E}","Produce \u2014 Vegetables":"\u{1F966}","Snacks & Candy":"\u{1F36B}"};
+const ICONS={"Baby":"\u{1F476}","Bakery & Bread":"\u{1F35E}","Beverages":"\u{1F964}","Dairy & Eggs":"\u{1F95B}","Floral":"\u{1F490}","Frozen":"\u{1F9CA}","Household":"\u{1F3E0}","Meat & Protein":"\u{1F969}","Pantry":"\u{1FAD9}","Personal Care":"\u{1FAA5}","Produce":"\u{1F96C}","Produce \u2014 Fruit":"\u{1F34E}","Produce \u2014 Vegetables":"\u{1F966}","Snacks & Candy":"\u{1F36B}","Other":"\u{1F4E6}"};
+const CATEGORIES=["Baby","Bakery & Bread","Beverages","Dairy & Eggs","Floral","Frozen","Household","Meat & Protein","Pantry","Personal Care","Produce \u2014 Fruit","Produce \u2014 Vegetables","Snacks & Candy","Other"];
 const SK="weekly-grocery-list-v2";
+const CK="custom-grocery-items";
 
-let state={store:"ralphs",search:"",list:JSON.parse(localStorage.getItem(SK)||"{}"),view:"browse",editNote:null,checked:{}};
+let state={store:"ralphs",search:"",list:JSON.parse(localStorage.getItem(SK)||"{}"),view:"browse",editNote:null,checked:{},showAddModal:false,customItems:JSON.parse(localStorage.getItem(CK)||"[]")};
 
 function save(){localStorage.setItem(SK,JSON.stringify(state.list))}
+function saveCustom(){localStorage.setItem(CK,JSON.stringify(state.customItems))}
 function k(s,i){return s+"::"+i}
 function dots(f){return "\u25CF".repeat(Math.min(f,5))+(f>5?"+":"")}
+function esc(s){return s.replace(/'/g,"\\'").replace(/"/g,"&quot;")}
 
-function render(){
-  const a=document.getElementById("app");
+function getItems(){
+  const base=state.store==="costco"?MASTER.costco:MASTER.ralphs;
+  const custom=state.customItems.filter(c=>c.store===state.store);
+  return [...base,...custom.map(c=>({cat:c.cat,item:c.item,freq:0,custom:true}))];
+}
+
+function renderToolbar(){
+  const tb=document.getElementById("toolbar");
   const listCount=Object.keys(state.list).length;
 
   if(state.view==="browse"){
-    const items=state.store==="costco"?MASTER.costco:MASTER.ralphs;
-    const q=state.search.toLowerCase();
-    const filtered=items.filter(i=>!q||i.item.toLowerCase().includes(q)||i.cat.toLowerCase().includes(q));
-    const grouped={};
-    filtered.forEach(i=>{if(!grouped[i.cat])grouped[i.cat]=[];grouped[i.cat].push(i)});
-
-    let h=`<div class="header"><h1>Weekly grocery list</h1>`;
-    if(listCount>0) h+=`<button class="btn-list active" onclick="state.view='list';render()">My list (${listCount})</button>`;
-    h+=`</div>`;
-
-    h+=`<div class="store-tabs">`;
-    h+=`<button class="store-tab ${state.store==="ralphs"?"active":""}" onclick="state.store='ralphs';state.search='';render()">Ralphs / Stater Bros</button>`;
-    h+=`<button class="store-tab ${state.store==="costco"?"active":""}" onclick="state.store='costco';state.search='';render()">Costco</button>`;
-    h+=`</div>`;
-
-    h+=`<input class="search" type="text" placeholder="Search items..." value="${state.search}" oninput="state.search=this.value;render()">`;
-
-    for(const[cat,catItems]of Object.entries(grouped)){
-      h+=`<div class="cat-group">`;
-      h+=`<div class="cat-header"><span class="icon">${ICONS[cat]||"\u{1F4E6}"}</span><span class="name">${cat}</span><span class="count">${catItems.length}</span></div>`;
-      for(const item of catItems){
-        const ky=k(state.store,item.item);
-        const added=!!state.list[ky];
-        const note=state.list[ky]?.note||"";
-        h+=`<div class="item-row ${added?"added":""}" onclick="toggleItem('${state.store}','${item.item.replace(/'/g,"\\'")}',${item.freq})">`;
-        h+=`<div class="checkbox ${added?"checked":""}"></div>`;
-        h+=`<div class="item-info"><div class="item-name ${added?"added":""}">${item.item}</div>`;
-        if(note) h+=`<div class="item-note-inline">${note}</div>`;
-        h+=`</div>`;
-        h+=`<div class="freq">${dots(item.freq)}</div>`;
-        if(added){
-          const qty=state.list[ky].qty||1;
-          h+=`<div class="qty-ctrl" onclick="event.stopPropagation()">`;
-          h+=`<button class="qty-btn" onclick="setQty('${ky}',-1)">\u2212</button>`;
-          h+=`<span class="qty-val">${qty}</span>`;
-          h+=`<button class="qty-btn" onclick="setQty('${ky}',1)">+</button>`;
-          h+=`</div>`;
-        }
-        h+=`</div>`;
-      }
-      h+=`</div>`;
-    }
-    a.innerHTML=h;
+    tb.innerHTML=`
+      <div class="header"><h1>Weekly grocery list</h1>
+      ${listCount>0?`<button class="btn-pill active" onclick="state.view='list';render()">My list (${listCount})</button>`:''}
+      </div>
+      <div class="store-tabs">
+        <button class="store-tab ${state.store==="ralphs"?"active":""}" onclick="switchStore('ralphs')">Ralphs / Stater Bros</button>
+        <button class="store-tab ${state.store==="costco"?"active":""}" onclick="switchStore('costco')">Costco</button>
+      </div>
+      <div class="search-row">
+        <input class="search" id="searchbox" type="text" placeholder="Search items..." value="${esc(state.search)}">
+        <button class="btn-add-new" onclick="state.showAddModal=true;renderModal()">+ Add</button>
+      </div>`;
+    var sb=document.getElementById("searchbox");
+    if(sb){sb.addEventListener("input",function(){state.search=this.value;renderContent()})}
   } else {
-    const entries=Object.entries(state.list);
-    const costcoItems=entries.filter(([,v])=>v.store==="costco");
-    const ralphsItems=entries.filter(([,v])=>v.store==="ralphs");
+    tb.innerHTML=`<div class="header"><h1>Weekly grocery list</h1><button class="btn-pill" onclick="state.view='browse';render()">\u2190 Browse</button></div>`;
+  }
+}
 
-    let h=`<div class="header"><h1>Weekly grocery list</h1><button class="btn-list" onclick="state.view='browse';render()">\u2190 Browse</button></div>`;
+function switchStore(s){state.store=s;state.search='';render();var sb=document.getElementById('searchbox');if(sb)sb.value=''}
 
+function renderContent(){
+  var el=document.getElementById("content");
+  var listCount=Object.keys(state.list).length;
+
+  if(state.view==="browse"){
+    var items=getItems();
+    var q=state.search.toLowerCase();
+    var filtered=items.filter(function(i){return !q||i.item.toLowerCase().includes(q)||i.cat.toLowerCase().includes(q)});
+    var grouped={};
+    filtered.forEach(function(i){if(!grouped[i.cat])grouped[i.cat]=[];grouped[i.cat].push(i)});
+
+    var h='';
+    for(var cat in grouped){
+      var catItems=grouped[cat];
+      h+='<div class="cat-group">';
+      h+='<div class="cat-header"><span class="icon">'+(ICONS[cat]||"\u{1F4E6}")+'</span><span class="name">'+cat+'</span><span class="count">'+catItems.length+'</span></div>';
+      for(var j=0;j<catItems.length;j++){
+        var item=catItems[j];
+        var ky=k(state.store,item.item);
+        var added=!!state.list[ky];
+        var note=state.list[ky]?.note||"";
+        var customTag=item.custom?'<span class="custom-tag">custom</span>':'';
+        h+='<div class="item-row '+(added?"added":"")+'" onclick="toggleItem(\''+esc(item.item)+'\')">';
+        h+='<div class="checkbox '+(added?"checked":"")+'"></div>';
+        h+='<div class="item-info"><div class="item-name '+(added?"added":"")+'">'+item.item+customTag+'</div>';
+        if(note) h+='<div class="item-note-inline">'+note+'</div>';
+        h+='</div>';
+        if(item.freq>0) h+='<div class="freq">'+dots(item.freq)+'</div>';
+        if(added){
+          var qty=state.list[ky].qty||1;
+          h+='<div class="qty-ctrl" onclick="event.stopPropagation()">';
+          h+='<button class="qty-btn" onclick="setQty(\''+esc(ky)+'\',-1)">\u2212</button>';
+          h+='<span class="qty-val">'+qty+'</span>';
+          h+='<button class="qty-btn" onclick="setQty(\''+esc(ky)+'\',1)">+</button>';
+          h+='</div>';
+        }
+        h+='</div>';
+      }
+      h+='</div>';
+    }
+    if(filtered.length===0){
+      h+='<div class="empty-state"><div style="font-size:15px;color:#999">No items match "'+state.search+'"</div><div style="font-size:13px;color:#bbb;margin-top:8px">Tap <strong>+ Add</strong> to create a new item</div></div>';
+    }
+    el.innerHTML=h;
+  } else {
+    var entries=Object.entries(state.list);
+    var costcoItems=entries.filter(function(e){return e[1].store==="costco"});
+    var ralphsItems=entries.filter(function(e){return e[1].store==="ralphs"});
+
+    var h='';
     if(listCount===0){
-      h+=`<div class="empty-state"><div class="empty-icon">\u{1F6D2}</div><div style="font-size:15px">Your list is empty</div><div style="font-size:13px;margin-top:4px">Switch to Browse to add items</div></div>`;
+      h+='<div class="empty-state"><div style="font-size:40px;margin-bottom:8px">\u{1F6D2}</div><div style="font-size:15px">Your list is empty</div><div style="font-size:13px;margin-top:4px">Switch to Browse to add items</div></div>';
     } else {
-      h+=`<div class="list-header"><span class="list-count">${listCount} items</span><button class="clear-btn" onclick="clearAll()">Clear all</button></div>`;
-
+      h+='<div class="list-header"><span class="list-count">'+listCount+' items</span><button class="clear-btn" onclick="clearAll()">Clear all</button></div>';
       if(costcoItems.length>0){
-        h+=`<div class="list-section"><div class="list-store-header">\u{1F3EA} Costco</div>`;
-        for(const[ky,v] of costcoItems) h+=renderListItem(ky,v);
-        h+=`</div>`;
+        h+='<div class="list-section"><div class="list-store-header">\u{1F3EA} Costco</div>';
+        for(var i=0;i<costcoItems.length;i++) h+=renderListItem(costcoItems[i][0],costcoItems[i][1]);
+        h+='</div>';
       }
       if(ralphsItems.length>0){
-        h+=`<div class="list-section"><div class="list-store-header">\u{1F3EA} Ralphs / Stater Bros</div>`;
-        for(const[ky,v] of ralphsItems) h+=renderListItem(ky,v);
-        h+=`</div>`;
+        h+='<div class="list-section"><div class="list-store-header">\u{1F3EA} Ralphs / Stater Bros</div>';
+        for(var i=0;i<ralphsItems.length;i++) h+=renderListItem(ralphsItems[i][0],ralphsItems[i][1]);
+        h+='</div>';
       }
     }
-    a.innerHTML=h;
+    el.innerHTML=h;
   }
 }
 
 function renderListItem(ky,v){
-  const chk=!!state.checked[ky];
-  let h=`<div class="list-item ${chk?"checked":""}">`;
-  h+=`<div class="list-item-top">`;
-  h+=`<div class="checkbox ${chk?"gray":""}" onclick="toggleCheck('${ky}')"></div>`;
-  h+=`<div class="list-item-name ${chk?"struck":""}">${v.item}</div>`;
-  h+=`<span class="list-item-cat">${v.cat}</span>`;
-  h+=`<div class="qty-ctrl">`;
-  h+=`<button class="qty-btn" onclick="setQty('${ky}',-1)">\u2212</button>`;
-  h+=`<span class="qty-val">${v.qty}</span>`;
-  h+=`<button class="qty-btn" onclick="setQty('${ky}',1)">+</button>`;
-  h+=`</div>`;
-  h+=`<button class="remove-btn" onclick="removeItem('${ky}')">\u00D7</button>`;
-  h+=`</div>`;
-  h+=`<div class="note-area">`;
+  var chk=!!state.checked[ky];
+  var h='<div class="list-item '+(chk?"checked":"")+'">';
+  h+='<div class="list-item-top">';
+  h+='<div class="checkbox '+(chk?"gray":"")+'" onclick="toggleCheck(\''+esc(ky)+'\')"></div>';
+  h+='<div class="list-item-name '+(chk?"struck":"")+'">'+v.item+'</div>';
+  h+='<span class="list-item-cat">'+v.cat+'</span>';
+  h+='<div class="qty-ctrl">';
+  h+='<button class="qty-btn" onclick="setQty(\''+esc(ky)+'\',-1)">\u2212</button>';
+  h+='<span class="qty-val">'+v.qty+'</span>';
+  h+='<button class="qty-btn" onclick="setQty(\''+esc(ky)+'\',1)">+</button>';
+  h+='</div>';
+  h+='<button class="remove-btn" onclick="removeItem(\''+esc(ky)+'\')">\u00D7</button>';
+  h+='</div>';
+  h+='<div class="note-area">';
   if(state.editNote===ky){
-    h+=`<input class="note-input" id="note-input" value="${(v.note||"").replace(/"/g,'&quot;')}" placeholder="Add a note..." onblur="saveNote('${ky}')" onkeydown="if(event.key==='Enter')saveNote('${ky}')">`;
+    h+='<input class="note-input" id="note-input" value="'+esc(v.note||"")+'" placeholder="Add a note..." onblur="saveNote(\''+esc(ky)+'\')" onkeydown="if(event.key===\'Enter\')saveNote(\''+esc(ky)+'\')">';
   } else {
-    if(v.note) h+=`<div class="note-text" onclick="startEditNote('${ky}')">${v.note}</div>`;
-    else h+=`<div class="note-placeholder" onclick="startEditNote('${ky}')">+ Add note</div>`;
+    if(v.note) h+='<div class="note-text" onclick="startEditNote(\''+esc(ky)+'\')">'+v.note+'</div>';
+    else h+='<div class="note-placeholder" onclick="startEditNote(\''+esc(ky)+'\')">+ Add note</div>';
   }
-  h+=`</div></div>`;
+  h+='</div></div>';
   return h;
 }
 
-function toggleItem(store,item,freq){
-  const ky=k(store,item);
+function renderModal(){
+  var mr=document.getElementById("modal-root");
+  if(!state.showAddModal){mr.innerHTML='';return}
+  var catOptions=CATEGORIES.map(function(c){return '<option value="'+c+'">'+c+'</option>'}).join('');
+  var storeLabel=state.store==="costco"?"Costco":"Ralphs / Stater Bros";
+  mr.innerHTML='<div class="modal-overlay" onclick="if(event.target===this){state.showAddModal=false;renderModal()}"><div class="modal"><h2>Add new item</h2><div class="modal-field"><label>Item name</label><input type="text" id="new-item-name" placeholder="e.g. Greek Yogurt"></div><div class="modal-field"><label>Category</label><select id="new-item-cat">'+catOptions+'</select></div><div class="modal-field"><label>Store</label><input type="text" value="'+storeLabel+'" disabled style="background:#f5f5f5;color:#888"></div><div class="modal-actions"><button class="btn-cancel" onclick="state.showAddModal=false;renderModal()">Cancel</button><button class="btn-confirm" onclick="addCustomItem()">Add to list</button></div></div></div>';
+  setTimeout(function(){var el=document.getElementById("new-item-name");if(el)el.focus()},100);
+}
+
+function addCustomItem(){
+  var name=document.getElementById("new-item-name").value.trim();
+  var cat=document.getElementById("new-item-cat").value;
+  if(!name)return;
+  var exists=state.customItems.some(function(c){return c.store===state.store&&c.item.toLowerCase()===name.toLowerCase()});
+  var baseItems=state.store==="costco"?MASTER.costco:MASTER.ralphs;
+  var existsInBase=baseItems.some(function(i){return i.item.toLowerCase()===name.toLowerCase()});
+  if(!exists&&!existsInBase){state.customItems.push({store:state.store,item:name,cat:cat});saveCustom()}
+  var ky=k(state.store,name);
+  if(!state.list[ky]){state.list[ky]={store:state.store,item:name,cat:cat,qty:1,note:""};save()}
+  state.showAddModal=false;renderModal();render();
+}
+
+function render(){renderToolbar();renderContent();renderModal()}
+
+function toggleItem(item){
+  var ky=k(state.store,item);
   if(state.list[ky]){delete state.list[ky]}
-  else{state.list[ky]={store,item,cat:getCat(store,item),qty:1,note:""}}
-  save();render();
+  else{state.list[ky]={store:state.store,item:item,cat:getCat(state.store,item),qty:1,note:""}}
+  save();renderContent();updateListBtn();
 }
 
 function getCat(store,item){
-  const src=store==="costco"?MASTER.costco:MASTER.ralphs;
-  const found=src.find(i=>i.item===item);
-  return found?found.cat:"";
+  var all=getItems();
+  var found=all.find(function(i){return i.item===item});
+  return found?found.cat:"Other";
+}
+
+function updateListBtn(){
+  var listCount=Object.keys(state.list).length;
+  var existing=document.querySelector('.btn-pill');
+  if(listCount>0){
+    if(existing){existing.textContent='My list ('+listCount+')';existing.classList.add('active')}
+    else renderToolbar();
+  } else if(existing) renderToolbar();
 }
 
 function setQty(ky,delta){
   if(!state.list[ky])return;
-  const nq=state.list[ky].qty+delta;
+  var nq=state.list[ky].qty+delta;
   if(nq<1)return;
   state.list[ky].qty=nq;
-  save();render();
+  save();renderContent();
 }
 
 function removeItem(ky){
@@ -203,27 +282,19 @@ function removeItem(ky){
   save();render();
 }
 
-function clearAll(){
-  state.list={};state.checked={};state.view="browse";
-  save();render();
-}
+function clearAll(){state.list={};state.checked={};state.view="browse";save();render()}
 
-function toggleCheck(ky){
-  state.checked[ky]=!state.checked[ky];
-  render();
-}
+function toggleCheck(ky){state.checked[ky]=!state.checked[ky];renderContent()}
 
 function startEditNote(ky){
-  state.editNote=ky;
-  render();
-  setTimeout(()=>{const el=document.getElementById("note-input");if(el)el.focus()},50);
+  state.editNote=ky;renderContent();
+  setTimeout(function(){var el=document.getElementById("note-input");if(el)el.focus()},50);
 }
 
 function saveNote(ky){
-  const el=document.getElementById("note-input");
+  var el=document.getElementById("note-input");
   if(el&&state.list[ky]){state.list[ky].note=el.value;save()}
-  state.editNote=null;
-  render();
+  state.editNote=null;renderContent();
 }
 
 render();
