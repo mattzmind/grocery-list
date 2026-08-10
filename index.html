@@ -59,6 +59,8 @@ body{font-family:'DM Sans',sans-serif;background:#fafaf8;color:#333;padding-bott
 .note-input{font-size:12px;border:1px solid #ddd;border-radius:6px;padding:4px 8px;width:80%;font-family:inherit;outline:none}
 .empty-state{text-align:center;padding:3rem 1rem;color:#999}
 .clear-btn{font-size:12px;color:#c62828;background:none;border:none;cursor:pointer;font-family:inherit;font-weight:500}
+.copy-btn{font-size:12px;color:#1a1a2e;background:none;border:none;cursor:pointer;font-family:inherit;font-weight:500}
+.copy-btn.copied{color:#2e7d32}
 .list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .list-count{font-size:13px;color:#888}
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
@@ -181,7 +183,7 @@ function renderContent(){
     if(listCount===0){
       h+='<div class="empty-state"><div style="font-size:40px;margin-bottom:8px">\u{1F6D2}</div><div style="font-size:15px">Your list is empty</div><div style="font-size:13px;margin-top:4px">Switch to Browse to add items</div></div>';
     } else {
-      h+='<div class="list-header"><span class="list-count">'+listCount+' items</span><button class="clear-btn" onclick="clearAll()">Clear all</button></div>';
+      h+='<div class="list-header"><span class="list-count">'+listCount+' items</span><div style="display:flex;gap:12px"><button class="copy-btn" onclick="copyList()">📋 Copy</button><button class="clear-btn" onclick="clearAll()">Clear all</button></div></div>';
       if(costcoItems.length>0){
         h+='<div class="list-section"><div class="list-store-header">\u{1F3EA} Costco</div>';
         for(var i=0;i<costcoItems.length;i++) h+=renderListItem(costcoItems[i][0],costcoItems[i][1]);
@@ -283,6 +285,27 @@ function removeItem(ky){
 }
 
 function clearAll(){state.list={};state.checked={};state.view="browse";save();render()}
+
+function copyList(){
+  var entries=Object.entries(state.list);
+  var costcoItems=entries.filter(function(e){return e[1].store==="costco"});
+  var ralphsItems=entries.filter(function(e){return e[1].store==="ralphs"});
+  var lines=[];
+  if(costcoItems.length>0){
+    lines.push("Costco:");
+    costcoItems.forEach(function(e){var v=e[1];var qty=v.qty>1?" x"+v.qty:"";lines.push("• "+v.item+qty)});
+  }
+  if(costcoItems.length>0&&ralphsItems.length>0) lines.push("");
+  if(ralphsItems.length>0){
+    lines.push("Ralphs/Stater Bros:");
+    ralphsItems.forEach(function(e){var v=e[1];var qty=v.qty>1?" x"+v.qty:"";lines.push("• "+v.item+qty)});
+  }
+  var text=lines.join("\n");
+  navigator.clipboard.writeText(text).then(function(){
+    var btn=document.querySelector('.copy-btn');
+    if(btn){btn.textContent="\u2705 Copied!";btn.classList.add('copied');setTimeout(function(){btn.textContent="\u{1F4CB} Copy";btn.classList.remove('copied')},2000)}
+  });
+}
 
 function toggleCheck(ky){state.checked[ky]=!state.checked[ky];renderContent()}
 
